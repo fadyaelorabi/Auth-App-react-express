@@ -2,9 +2,11 @@ const express = require('express');   // Use require() in CommonJS
 const mongoose = require('mongoose'); // Use require() in CommonJS
 const bcrypt = require('bcrypt');     // Use require() in CommonJS
 const User = require('./models/User'); // Use require() in CommonJS
+const LoginLog = require('./models/LoginLog');  // Import the LoginLog model
 const jwt = require('jsonwebtoken');  // Use require() in CommonJS
 const cors = require('cors');          // Use require() in CommonJS
 const cookieParser = require('cookie-parser');
+
 
 const app = express();
 app.use(express.json());
@@ -22,7 +24,7 @@ This specifies the allowed origin(s). In this case, only requests coming from ht
 app.use(cookieParser());
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://root:root@cluster0.x5vov.mongodb.net/signup?retryWrites=true&w=majority&appName=Cluster0', {
+mongoose.connect('mongodb+srv://root:root@cluster0.x5vov.mongodb.net/auth-db?retryWrites=true&w=majority&appName=Cluster0', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
@@ -50,7 +52,7 @@ app.post('/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 4. Create a new instance of the User model
-    const user = new User({ name, email, password: hashedPassword });
+    const user = new User({ name, email, password: hashedPassword, auth_method: 'manual', created_at: new Date() });
 
     // 5. Save the user to the database
     await user.save();
@@ -68,7 +70,7 @@ app.post('/register', async (req, res) => {
   }
 });
 
-// Login API (without JWT)
+// Login API 
 app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -96,6 +98,20 @@ app.post('/login', async (req, res) => {
     // 5. Send the token as a response
     res.status(200).json({ message: 'Login successful!', token });
 
+  
+    // 6. Capture login details and store in the login log
+    const ipAddress = req.headers['x-forwarded-for'] || req.connection.remoteAddress;  // Capture user's IP address
+
+    const loginLog = new LoginLog({
+      user_id: user._id,
+      ip_address: ipAddress
+    });
+
+    await loginLog.save();  // Save the login event to the database
+
+    // 7. Send the token and a success response
+    res.status(200).json({ message: 'Login successful!', token });
+    
   } catch (error) {
     console.error('Error logging in user:', error);
 

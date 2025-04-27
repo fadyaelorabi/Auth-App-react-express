@@ -17,6 +17,14 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true
+  },
+  auth_method: {
+    type: String,
+    default: 'manual'  // Set default to 'manual' for regular sign-ups
+  },
+  created_at: {
+    type: Date,
+    default: Date.now  // Store the current timestamp when the user is created
   }
 });
 
