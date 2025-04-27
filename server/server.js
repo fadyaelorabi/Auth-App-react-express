@@ -8,7 +8,17 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors(
+    {
+        origin: 'http://localhost:5173',
+        methods: ['GET', 'POST'],
+        credentials: true
+    }
+));
+
+/*
+This specifies the allowed origin(s). In this case, only requests coming from http://localhost:5173 (your frontend running on port 5173) are allowed to access resources from your backend.
+*/
 app.use(cookieParser());
 
 // Connect to MongoDB
@@ -80,8 +90,11 @@ app.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
-    // 4. Send a success response without a token
-    res.status(200).json({ message: 'Login successful!' });
+    // 4. Generate a JWT token (set an expiration time as needed)
+    const token = jwt.sign({ userId: user._id, email: user.email }, 'JWT_SECRET', { expiresIn: '1h' });
+    res.cookie('token', token);
+    // 5. Send the token as a response
+    res.status(200).json({ message: 'Login successful!', token });
 
   } catch (error) {
     console.error('Error logging in user:', error);

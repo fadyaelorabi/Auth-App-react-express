@@ -10,7 +10,7 @@ const Login = () => {
   }); 
 
 const navigate = useNavigate();  // Create navigate function to programmatically navigate
- 
+axios.defaults.withCredentials = true; 
 const handleSubmit = async (e) => {
   e.preventDefault();
 
