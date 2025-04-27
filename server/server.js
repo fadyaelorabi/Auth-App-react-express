@@ -91,7 +91,7 @@ app.post('/login', async (req, res) => {
     }
 
     // 4. Generate a JWT token (set an expiration time as needed)
-    const token = jwt.sign({ userId: user._id, email: user.email }, 'JWT_SECRET', { expiresIn: '1h' });
+    const token = jwt.sign({ userId: user._id, email: user.email , name: user.name}, 'JWT_SECRET', { expiresIn: '1h' });
     res.cookie('token', token);
     // 5. Send the token as a response
     res.status(200).json({ message: 'Login successful!', token });
@@ -109,6 +109,34 @@ app.post('/login', async (req, res) => {
   }
 });
 
+// JWT Verification Middleware
+const verifyUser = (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) {
+        return res.json({ Error: "You are not authenticated" });
+    } else {
+        jwt.verify(token, 'JWT_SECRET', (err, decoded) => {
+            if (err) {
+                return res.json({ Error: "Token is not valid" });
+            } else {
+                req.name = decoded.name;
+                next();
+            }
+        });
+    }
+};
+
+// Protected Route
+app.get('/', verifyUser, (req, res) => {
+    // Protected content here
+    res.json({ Status: "Success", name: req.name });
+});
+
+//logout Route
+app.post('/logout', (req, res) => {
+  res.clearCookie('token');
+  res.json({ message: 'Logged out successfully' });
+});
 
 
 const PORT = 8081;
