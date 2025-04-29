@@ -24,7 +24,7 @@ This specifies the allowed origin(s). In this case, only requests coming from ht
 app.use(cookieParser());
 
 // Connect to MongoDB
-mongoose.connect('mongodb+srv://root:root@cluster0.x5vov.mongodb.net/auth-db?retryWrites=true&w=majority&appName=Cluster0', {
+mongoose.connect('', {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
